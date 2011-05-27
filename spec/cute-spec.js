@@ -1,5 +1,76 @@
+describe("Eager", function() {
+  it("should schedule single actions", function() {
+    var eager = cute.Eager();
+    var self = this;
+    runs(function() {
+      eager.exec(
+              function(complete_callback) {
+                setTimeout(function() {
+                  complete_callback('first')
+                }, 40);
+              })
+              .end(
+              function(data) {
+                self.result = data;
+              }
+              );
+    });
+
+    waits(100);
+
+    runs(function () {
+      expect(this.result).toEqual('first');
+    });
+  });
+
+  it("should execute actions in parallel, not sterilizing them but call the final callback when all asynchronous results are available", function() {
+    var eager = cute.Eager();
+    var self = this;
+    self.result = undefined;
+    runs(function() {
+      eager.exec(
+              function(complete_callback) {
+                setTimeout(function() {
+                  complete_callback('first')
+                }, 400); // execute after 400 ms
+              }
+              );
+      eager.exec(
+              function(complete_callback) {
+                setTimeout(function() {
+                  complete_callback('second')
+                }, 400); // execute after 400 ms
+              }
+              );
+      eager.exec(
+              function(complete_callback) {
+                setTimeout(function() {
+                  complete_callback('third')
+                }, 400); // execute after 400 ms
+              }
+              );
+
+      eager.end(
+              function(data1, data2, data3) {
+                self.result = [data1, data2, data3];
+              }
+              );
+    });
+
+    waits(500); // wait 500 ms
+    // serialized execution would take more than 1200ms
+    // but we are running functions in 'concurrently'
+
+    runs(function () {
+      expect(this.result).toEqual(['first', 'second', 'third']);
+    });
+  });
+
+
+});
+
 describe("Tense", function() {
-  it("should shedule single actions", function() {
+  it("should schedule single actions", function() {
     var tense = cute.Tense();
     var self = this;
     runs(function() {
@@ -180,7 +251,7 @@ describe("Serial", function() {
 
 
 describe("Lax", function() {
-  it("should shedule single actions", function() {
+  it("should schedule single actions", function() {
     var lax = cute.Lax();
     var self = this;
     runs(function() {

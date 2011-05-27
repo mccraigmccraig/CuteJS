@@ -204,7 +204,7 @@ window.cute = window.cute || {};
 
 
   /**
-   * Serial is a behaviour which allows define dependency chain of asynchronous function calls.
+   * Serial is a behaviour which allows to define dependency chain of asynchronous function calls.
    * Results of asynchronous calls are provided as arguments to their callbacks, which in turn, pass the result to the next asynchronous call in chain.
    */
   function Serial(accumulator, error_handler) {
@@ -236,7 +236,7 @@ window.cute = window.cute || {};
       var agent;
       complete_callback = complete_callback || function(data, _previous) {
         return data
-      };    //TODO look closer at it !!
+      };
       if (!this.current_agent) {
         agent = new SerialAgent(agent_name, true, this.accumulator, complete_callback, this.error_handler);  // is first agent in the chain
       } else {
@@ -278,49 +278,7 @@ window.cute = window.cute || {};
      * @param complete_callback -  @see complete_callback parameter in Serial.exec method
      * @param agent_name - the name of the underlying agent.
      */
-    ajax: function(ajax_settings, complete_callback, agent_name) {
-      agent_name = agent_name || "SAJAX url: ";
-      var orig_complete = ajax_settings.complete;
-      var orig_success = ajax_settings.success;
-      var orig_error = ajax_settings.error;
-      //
-      var proxy_callback = function(result, on_action_complete) {
-        if (result.type == 'success') {
-          on_action_complete(result.data);
-          if (orig_success) orig_success.call(result.xhr, result.data, result.xhr);
-        } else if (result.type == 'error') {
-          on_action_complete({error: true, xhr: result.xhr, errorThrown: result.errorThrown, textStatus: result.textStatus});
-          if (orig_error) orig_error.call(result.xhr, result.xhr, result.textStatus, result.errorThrown);
-        } else if (result.type == 'complete') {
-          if (orig_complete) orig_complete.call(result.xhr, result.xhr, result.textStatus);
-        }
-      };
-
-      //
-      var complete = function(on_action_complete) {
-        return function(xhr, textStatus) {
-          proxy_callback({type: 'complete', xhr: xhr, textStatus: textStatus}, on_action_complete);
-        }
-      };
-      var success = function(on_action_complete) {
-        return function(data, xhr) {
-          proxy_callback({type: 'success', data: data, xhr: xhr, textStatus: 'success'}, on_action_complete);
-        }
-      };
-      var error = function(on_action_complete) {
-        return function(xhr, textStatus, errorThrown) {
-          proxy_callback({type: 'error', xhr: xhr, textStatus: textStatus, errorThrown: errorThrown}, on_action_complete);
-        }
-      };
-
-      //
-      var ajax_action = function(on_action_complete) {
-        jQuery.ajax(jQuery.extend({}, ajax_settings, {success: success(on_action_complete), error: error(on_action_complete), complete: complete(on_action_complete)}));
-      };
-      this.exec(ajax_action, complete_callback, agent_name + ajax_settings.url);
-
-      return this;
-    }
+    ajax: ajax
 
   };
 
@@ -383,7 +341,7 @@ window.cute = window.cute || {};
   };
 
   /**
-   * Tense is a behaviour which allows define concurrent asynchronous actions where the last scheduled action pre-empt waiting queue,
+   * Tense is a behaviour which allows to define concurrent asynchronous actions where the last scheduled action pre-empt waiting queue,
    * so there is at most one action waiting for the resource and the most recent one cancels previous one.
    * When the currently executing action finishes, the waiting starts immediately afterwards and new action can wait for its turn.
    */
@@ -407,48 +365,7 @@ window.cute = window.cute || {};
       this.agent.action(action, complete_callback);
       return this;
     },
-    ajax: function(ajax_settings, complete_callback) {
-      var orig_complete = ajax_settings.complete;
-      var orig_success = ajax_settings.success;
-      var orig_error = ajax_settings.error;
-      //
-      var proxy_callback = function(result, on_action_complete) {
-        if (result.type == 'success') {
-          on_action_complete(result.data);
-          if (orig_success) orig_success.call(result.xhr, result.data, result.xhr);
-        } else if (result.type == 'error') {
-          on_action_complete({error: true, xhr: result.xhr, errorThrown: result.errorThrown, textStatus: result.textStatus});
-          if (orig_error) orig_error.call(result.xhr, result.xhr, result.textStatus, result.errorThrown);
-        } else if (result.type == 'complete') {
-          if (orig_complete) orig_complete.call(result.xhr, result.xhr, result.textStatus);
-        }
-      };
-
-      //
-      var complete = function(on_action_complete) {
-        return function(xhr, textStatus) {
-          proxy_callback({type: 'complete', xhr: xhr, textStatus: textStatus}, on_action_complete);
-        }
-      };
-      var success = function(on_action_complete) {
-        return function(data, xhr) {
-          proxy_callback({type: 'success', data: data, xhr: xhr, textStatus: 'success'}, on_action_complete);
-        }
-      };
-      var error = function(on_action_complete) {
-        return function(xhr, textStatus, errorThrown) {
-          proxy_callback({type: 'error', xhr: xhr, textStatus: textStatus, errorThrown: errorThrown}, on_action_complete);
-        }
-      };
-
-      //
-      var ajax_action = function(on_action_complete) {
-        jQuery.ajax(jQuery.extend({}, ajax_settings, {success: success(on_action_complete), error: error(on_action_complete), complete: complete(on_action_complete)}));
-      };
-      this.exec(ajax_action, complete_callback);
-
-      return this;
-    }
+    ajax: ajax
   };
 
   window.cute.Tense = Tense;
@@ -528,10 +445,10 @@ window.cute = window.cute || {};
       }
       var new_activity = {};
       new_activity.callbacks = map(callbacks, function(c) {
-        return function(){
+        return function() {
           if (new_activity.interrupted) {
             //do nothing
-          }else{
+          } else {
             c.apply(undefined, arguments);
           }
         }
@@ -541,13 +458,13 @@ window.cute = window.cute || {};
     });
   };
 
- /**
-  * Lax is a behaviour which allows define concurrent asynchronous actions where the last scheduled action invalidates the one currently being executed,,
-  * (ˆ la interrupting) by marking its callback function as interrupted so the completion of the current action is ignored. The freshly submitted action becomes
-  * the current one and it is executed immediately. This behaviour is very useful for high responsive UI which should reflect the most recent user query.
-  * So, for example, UI represent remote resource nad user is frequently querying it with different parameters (by fast button pressing) all but last queries will be
-  * canceled.
-  */
+  /**
+   * Lax is a behaviour which allows to define concurrent asynchronous actions where the last scheduled action invalidates the one currently being executed,,
+   * (ˆ la interrupting) by marking its callback function as interrupted so the completion of the current action is ignored. The freshly submitted action becomes
+   * the current one and it is executed immediately. This behaviour is very useful for high responsive UI which should reflect the most recent user query.
+   * So, for example, UI represent remote resource nad user is frequently querying it with different parameters (by fast button pressing) all but last queries will be
+   * canceled.
+   */
   function Lax() {
     /**
      * Allow instantiation without new keyword
@@ -567,12 +484,101 @@ window.cute = window.cute || {};
       var callbacks = Array.prototype.slice.call(arguments, 1, arguments.length);
       this.agent.action(action, callbacks);
       return this;
-    }
+    },
+    ajax: ajax
   };
 
   window.cute.Lax = Lax;
 
   //--------------------------------------------------------------------------------------------------------------------
+
+  //====================================================================================================================
+
+  /**
+   *  Agent for Eager behaviour
+   */
+  function EagerAgent(error_handler) {
+    this.agent = new Agent({futures: [], completed_count: 0}, {error_mode: 'continue', error_handler: error_handler});
+  }
+
+
+  EagerAgent.prototype.action = function(action) {
+    var self = this;
+    this.agent.send(function(state) {
+      if (state.final_callback) {
+        throw "Eager behaviour is terminated. No more scheduling of asynchronous actions is allowed."
+      } else {
+        var future = {action: action, complete: false};
+        state.futures.push(future);
+        action(function(result) {
+          self.action_complete(result, future);
+        })
+      }
+    });
+  };
+
+  EagerAgent.prototype.action_complete = function(result, future) {
+    this.agent.send(function(state) {
+      future.result = result;
+      state.completed_count = state.completed_count + 1;
+      if (state.final_callback && state.completed_count == state.futures.length) {
+        state.final_callback.apply(undefined, map(state.futures, function(future) {
+          return future.result
+        }));
+      }
+    });
+  };
+
+  EagerAgent.prototype.register_callbacks = function(final_callback) {
+    this.agent.send(function(state) {
+      state.final_callback = final_callback;
+      if (state.completed_count == state.futures.length) {
+        state.final_callback.apply(undefined, state.results);
+      }
+    });
+  };
+
+
+  /**
+   * Eager is a behaviour which allows to define concurrent asynchronous actions whose results are collected and provided in single final callback.
+   * The asynchronous actions are executed in parallel and do not depend on each other. Eager is useful for example when we need to do single UI update
+   * which depends on several resources each accessed via separate ajax call.
+   */
+  function Eager() {
+
+    /**
+     * Allow instantiation without new keyword
+     */
+    if (!(this instanceof Eager)) {
+      return new Eager();
+    }
+    this.agent = new EagerAgent(this.error_handler);
+
+  }
+
+
+  Eager.prototype = {
+    error_handler: function(exception) {
+    },
+    exec: function(action) {
+      this.agent.action(action);
+      return this;
+    },
+
+    ajax: ajax,
+    /**
+     * Terminating callback
+     * @param final_callback
+     */
+    end: function(final_callback) {
+      this.agent.register_callbacks(final_callback);
+    }
+  };
+
+  window.cute.Eager = Eager;
+
+  //--------------------------------------------------------------------------------------------------------------------
+
 
   /**
    * Add sexy convenience methods
@@ -597,6 +603,8 @@ window.cute = window.cute || {};
   for (i = 0,n = dataTypes.length; i < n; ++i) {
     addDataTypeMethod(Serial, dataTypes[i]);
     addDataTypeMethod(Tense, dataTypes[i]);
+    addDataTypeMethod(Eager, dataTypes[i]);
+    addDataTypeMethod(Lax, dataTypes[i]);
   }
 
 
@@ -616,5 +624,49 @@ window.cute = window.cute || {};
   for (i in Tense.prototype) {
     addStaticMethod(Tense, i);
   }
+
+  function ajax(ajax_settings, complete_callback, agent_name) {
+      agent_name = agent_name || "AJAX Agent";
+      var orig_complete = ajax_settings.complete;
+      var orig_success = ajax_settings.success;
+      var orig_error = ajax_settings.error;
+      //
+      var proxy_callback = function(result, on_action_complete) {
+        if (result.type == 'success') {
+          on_action_complete(result.data);
+          if (orig_success) orig_success.call(result.xhr, result.data, result.xhr);
+        } else if (result.type == 'error') {
+          on_action_complete({error: true, xhr: result.xhr, errorThrown: result.errorThrown, textStatus: result.textStatus});
+          if (orig_error) orig_error.call(result.xhr, result.xhr, result.textStatus, result.errorThrown);
+        } else if (result.type == 'complete') {
+          if (orig_complete) orig_complete.call(result.xhr, result.xhr, result.textStatus);
+        }
+      };
+
+      //
+      var complete = function(on_action_complete) {
+        return function(xhr, textStatus) {
+          proxy_callback({type: 'complete', xhr: xhr, textStatus: textStatus}, on_action_complete);
+        }
+      };
+      var success = function(on_action_complete) {
+        return function(data, xhr) {
+          proxy_callback({type: 'success', data: data, xhr: xhr, textStatus: 'success'}, on_action_complete);
+        }
+      };
+      var error = function(on_action_complete) {
+        return function(xhr, textStatus, errorThrown) {
+          proxy_callback({type: 'error', xhr: xhr, textStatus: textStatus, errorThrown: errorThrown}, on_action_complete);
+        }
+      };
+
+      //
+      var ajax_action = function(on_action_complete) {
+        jQuery.ajax(jQuery.extend({}, ajax_settings, {success: success(on_action_complete), error: error(on_action_complete), complete: complete(on_action_complete)}));
+      };
+      this.exec(ajax_action, complete_callback, agent_name + ajax_settings.url);
+
+      return this;
+    }
 
 })(this, this.jQuery);

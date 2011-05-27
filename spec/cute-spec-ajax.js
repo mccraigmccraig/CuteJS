@@ -1,3 +1,104 @@
+describe("Eager", function() {
+
+it("should execute ajax calls in parallel, not sterilizing them but call the final callback when all asynchronous results are available", function() {
+    var eager = cute.Eager();
+    var self = this;
+    self.result = undefined;
+    runs(function() {
+      eager.ajax(
+              {
+                url: '../fixtures/first_json_fixture.json?killcache=' + (new Date().getTime())
+              },
+              function(data, status) {
+                self.result.first_result = {data: data, status: status};
+              }
+              );
+      eager.ajax(
+              {
+                url: '../fixtures/second_json_fixture.json?killcache=' + (new Date().getTime())
+              },
+              function(data, status) {
+                self.result.second_result = {data: data, status: status};
+              }
+              );
+      eager.ajax(
+              {
+                url: '../fixtures/third_json_fixture.json?killcache=' + (new Date().getTime())
+              },
+              function(data, status) {
+                self.result.third_result = {data: data, status: status};
+              }
+              );
+
+      eager.end(
+              function(data1, data2, data3) {
+                self.result = [data1, data2, data3];
+              }
+              );
+    });
+
+    waits(500); // wait 500 ms
+
+    runs(function () {
+      expect(this.result[0]).toEqual({ type : 'simple', name : 'first', deeper : { array : [ 'some', 'more', 'data', 0, 2, 99 ], hash : { a : 1, b : 2, c : 3 } } });
+      expect(this.result[1]).toEqual({ type : 'simple', name : 'second', deeper : { array : [ 'some', 'more', 'data', 0, 2, 99 ], hash : { a : 1, b : 2, c : 3 } } });
+      expect(this.result[2]).toEqual({ type : 'simple', name : 'third', deeper : { array : [ 'some', 'more', 'data', 0, 2, 99 ], hash : { a : 1, b : 2, c : 3 } } });
+    });
+  });
+
+
+  it("should execute ajax calls in parallel, not sterilizing them but call the final callback when all asynchronous results are available and handle ajax errors", function() {
+    var eager = cute.Eager();
+    var self = this;
+    self.result = undefined;
+    runs(function() {
+      eager.ajax(
+              {
+                url: '../fixtures/first_json_fixture.json?killcache=' + (new Date().getTime())
+              },
+              function(data, status) {
+                self.result.first_result = {data: data, status: status};
+              }
+              );
+      eager.ajax(
+              {
+                url: '../fixtures/error_400_fixture.json?killcache=' + (new Date().getTime())
+              },
+              function(data, status) {
+                self.result.second_result = {data: data, status: status};
+              }
+              );
+      eager.ajax(
+              {
+                url: '../fixtures/third_json_fixture.json?killcache=' + (new Date().getTime())
+              },
+              function(data, status) {
+                self.result.third_result = {data: data, status: status};
+              }
+              );
+
+      eager.end(
+              function(data1, data2, data3) {
+                self.result = [data1, data2, data3];
+              }
+              );
+    });
+
+    waits(500); // wait 500 ms
+
+    runs(function () {
+      expect(this.result[0]).toEqual({ type : 'simple', name : 'first', deeper : { array : [ 'some', 'more', 'data', 0, 2, 99 ], hash : { a : 1, b : 2, c : 3 } } });
+      expect(this.result[1].error).toEqual(true);
+      expect(this.result[2]).toEqual({ type : 'simple', name : 'third', deeper : { array : [ 'some', 'more', 'data', 0, 2, 99 ], hash : { a : 1, b : 2, c : 3 } } });
+    });
+  });
+
+});
+
+
+
+
+
 describe("Tense", function() {
   it("should cancel waiting ajax'es", function() {
     var tense = cute.Tense();
