@@ -1,0 +1,12 @@
+{
+  "type": "simple",
+  "name": "first",
+  "deeper": {
+    "array": ["some", "more", "data", 0, 2, 99],
+    "hash": {
+      "a": 1,
+      "b": 2,
+      "c": 3
+    }
+  }
+}

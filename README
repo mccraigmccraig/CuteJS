@@ -1,0 +1,39 @@
+CuteJS - asynchronous algorithms simplified
+
+Copyright 2011, Daniel Kwiecinski
+Dual licensed under the MIT or GPL Version 2 licenses.
+
+
+
+CuteJS is a set of utilities easing development of asynchronous activities in javascript.
+It contains agent implementation, mutual exclusion implementation and three behaviours: Serial, Tense and Lax.
+
+Mutex - instance represents critical resource. It provides 'sync' method which wraps a function returning it thread-safe version.
+
+Agent - this is analogy to clojure agents or erlang process. Namely, entity holding a state which can be mutated by asynchronous message passing.
+
+Serial - a behaviour which allows define dependency chain of asynchronous function calls.
+  Results of asynchronous calls are provided as arguments to their callbacks, which in turn, pass the result to the next asynchronous call in chain.
+
+Tense - a behaviour which allows to define concurrent asynchronous actions where the last scheduled action pre-empt waiting queue,
+  so there is at most one action waiting for the resource and the most recent one cancels previous one.
+  When the currently executing action finishes, the waiting starts immediately afterwards and new action can wait for its turn.
+
+Lax - a behaviour which allows define concurrent asynchronous actions where the last scheduled action invalidates the one currently being executed,
+  (ˆ la interrupting) by marking its callback function as interrupted so the completion of the current action is ignored. The freshly submitted action becomes
+  the current one and it is executed immediately. This behaviour is very useful for high responsive UI which should reflect the most recent user query.
+  So, for example, UI represent remote resource nad user is frequently querying it with different parameters (by fast button pressing) all but last queries will be
+  canceled.
+
+
+
+Please check out the spec for working examples.
+
+(to execute ajax spec, please run the server.sh script. It will start python static resource web-server. Point your browser to http://localhost:7778/spec/cute-spec-ajax.html)
+
+
+
+
+
+
+
