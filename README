@@ -37,6 +37,9 @@ Please check out the spec for working examples.
 (to execute ajax spec, please run the server.sh script. It will start python static resource web-server. Point your browser to http://localhost:7778/spec/cute-spec-ajax.html)
 
 
+Dependencies: CuteJS depends only on jQuery and it uses it only for ajax related functions. Shall you not need these please feel free not to include that dependency.
+
+
 
 
 
